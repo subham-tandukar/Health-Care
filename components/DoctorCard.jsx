@@ -20,11 +20,11 @@ export const DoctorCard = ({
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div className="relative">
-            <img
-              src={image}
-              alt={`Dr. ${name}`}
-              className="w-20 h-20 rounded-full object-cover border-4 border-primary/20"
-            />
+            <div
+              className="w-20 h-20 rounded-full uppercase object-cover bg-primary/10 text-primary text-2xl flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors"
+            >
+              {name.split("")[0]}
+              </div>
             {availableToday && (
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full border-2 border-card flex items-center justify-center">
                 <div className="w-2 h-2 bg-success-foreground rounded-full"></div>
