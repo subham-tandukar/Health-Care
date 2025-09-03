@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { HeroSection } from "@/components/HeroSection";
-import { DoctorCard } from "@/components/DoctorCard";
-import { AppointmentBooking } from "@/components/AppointmentBooking";
+import { HeroSection } from "@/components/home/HeroSection";
+import { DoctorCard } from "@/components/home/DoctorCard";
+import { AppointmentBooking } from "@/components/home/AppointmentBooking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,7 +25,7 @@ const doctors = [
     specialty: "Cardiology",
     rating: 4.9,
     experience: "15 years",
-    location: "Downtown Medical Center",
+    email: "sarah.smith@medical.com",
     image: "/placeholder.svg",
     availableToday: true,
   },
@@ -35,7 +35,7 @@ const doctors = [
     specialty: "Neurology",
     rating: 4.8,
     experience: "12 years",
-    location: "University Hospital",
+    email: "michael.williams@medical.com",
     image: "/placeholder.svg",
     availableToday: false,
   },
@@ -45,7 +45,7 @@ const doctors = [
     specialty: "Pediatrics",
     rating: 4.9,
     experience: "8 years",
-    location: "Children's Medical Center",
+    email: "emily.brown@medical.com",
     image: "/placeholder.svg",
     availableToday: true,
   },
@@ -55,7 +55,7 @@ const doctors = [
     specialty: "Orthopedics",
     rating: 4.7,
     experience: "20 years",
-    location: "Sports Medicine Clinic",
+    email: "james.garcia@medical.com",
     image: "/placeholder.svg",
     availableToday: true,
   },

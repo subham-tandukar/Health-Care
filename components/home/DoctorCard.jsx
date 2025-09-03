@@ -1,8 +1,8 @@
-"use client"
+"use client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Clock } from "lucide-react";
+import { Star, MapPin, Clock, Mail } from "lucide-react";
 
 export const DoctorCard = ({
   id,
@@ -10,7 +10,7 @@ export const DoctorCard = ({
   specialty,
   rating,
   experience,
-  location,
+  email,
   image,
   availableToday,
   onBookAppointment,
@@ -20,13 +20,11 @@ export const DoctorCard = ({
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
           <div className="relative">
-            <div
-              className="w-20 h-20 rounded-full uppercase object-cover bg-primary/10 text-primary text-2xl flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors"
-            >
+            <div className="w-20 h-20 rounded-full uppercase object-cover bg-primary/10 text-primary text-2xl flex items-center justify-center mx-auto group-hover:bg-primary/20 transition-colors">
               {name.split("")[0]}
-              </div>
+            </div>
             {availableToday && (
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full border-2 border-card flex items-center justify-center">
+              <div className="absolute bottom-1 right-1 w-4 h-4 bg-success rounded-full border-2 border-card flex items-center justify-center">
                 <div className="w-2 h-2 bg-success-foreground rounded-full"></div>
               </div>
             )}
@@ -40,11 +38,6 @@ export const DoctorCard = ({
                 </h3>
                 <p className="text-muted-foreground font-medium">{specialty}</p>
               </div>
-
-              <div className="flex items-center gap-1">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-semibold text-sm">{rating}</span>
-              </div>
             </div>
 
             <div className="space-y-2 mb-4">
@@ -54,8 +47,8 @@ export const DoctorCard = ({
               </div>
 
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4" />
-                <span>{location}</span>
+                <Mail className="w-4 h-4" />
+                <span>{email}</span>
               </div>
             </div>
 
@@ -64,7 +57,7 @@ export const DoctorCard = ({
                 {availableToday && (
                   <Badge
                     variant="secondary"
-                    className="bg-success-light text-success-foreground"
+                    className="bg-success/10 text-success border-success/20"
                   >
                     Available Today
                   </Badge>
