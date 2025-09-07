@@ -10,11 +10,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Heart, Stethoscope, Eye, EyeOff } from "lucide-react";
+import { Heart, Stethoscope, Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { signIn } from "next-auth/react";
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("Please wait");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -27,10 +32,32 @@ const LoginPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const router = useRouter();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login attempt:", formData);
-    // Here you would typically handle the login logic
+
+    try {
+      setLoading(true);
+      const result = await signIn("credentials", {
+        ...formData,
+        redirect: false,
+      });
+      if (result.error) {
+        setLoading(false);
+        toast.error(result.error || "Something went wrong.");
+      } else {
+        toast.success("Login successful");
+        setLoadingText("Redirecting to dashboard");
+        // Redirect to the admin dashboard after successful login
+        router.replace("/admin/dashboard");
+      }
+    } catch (error) {
+      toast.error(
+        error.message || "An unexpected error occurred. Please try again."
+      );
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,9 +77,7 @@ const LoginPage = () => {
           {/* Header */}
           <div className="text-center mb-8 text-primary-foreground">
             <h1 className="text-3xl font-bold mb-2">Admin Portal</h1>
-            <p>
-              Secure access to your healthcare dashboard
-            </p>
+            <p>Secure access to your healthcare dashboard</p>
           </div>
 
           {/* Login Card */}
@@ -76,7 +101,6 @@ const LoginPage = () => {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="doctor@hospital.com"
                     value={formData.email}
                     onChange={handleInputChange}
                     className="border-medical-border/50 focus:border-medical-blue focus:ring-medical-blue/20"
@@ -93,7 +117,6 @@ const LoginPage = () => {
                       id="password"
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
                       value={formData.password}
                       onChange={handleInputChange}
                       className="border-medical-border/50 focus:border-medical-blue focus:ring-medical-blue/20 pr-10"
@@ -115,9 +138,24 @@ const LoginPage = () => {
                   </div>
                 </div>
 
-                <Button type="submit" size="lg" className="w-full">
-                  <Stethoscope className="h-4 w-4 mr-2" />
-                  Login to Dashboard
+                <Button
+                  type="submit"
+                  size="lg"
+                  className={`w-full ${
+                    loading && "pointer-events-none opacity-50"
+                  }`}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="animate-spin" />
+                      {loadingText}
+                    </>
+                  ) : (
+                    <>
+                      <Stethoscope className="h-4 w-4 mr-2" />
+                      Login to Dashboard
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>

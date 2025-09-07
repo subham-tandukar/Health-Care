@@ -1,5 +1,6 @@
 import { Jost } from "next/font/google";
 import "./globals.css";
+import { ToastContainer } from "react-toastify";
 
 const fontJost = Jost({
   variable: "--font-jost",
@@ -16,6 +17,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={fontJost.variable}>
     <body className="antialiased font-sans">
+      <ToastContainer/>
       {children}
     </body>
   </html>

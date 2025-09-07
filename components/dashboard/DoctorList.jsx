@@ -71,38 +71,50 @@ const getStatusBadge = (status) => {
   }
 };
 
-export const DoctorsList = () => {
+export const DoctorsList = ({ doctors }) => {
   return (
     <div className="space-y-4">
-      {mockDoctors.slice(0, 4).map((doctor) => (
-        <div
-          key={doctor.id}
-          className="flex items-center justify-between p-4 bg-card rounded-lg border border-border/50 hover:bg-accent/5 transition-colors"
-        >
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-primary text-white flex justify-center items-center font-medium">
-              {doctor.name.split("")[0]}
-            </div>
-            <div>
-              <h4 className="font-medium text-foreground">Dr. {doctor.name}</h4>
-              <p className="text-sm text-muted-foreground">
-                {doctor.specialization}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {doctor.patientsToday} patients today
-              </p>
-            </div>
-          </div>
+      {doctors.length > 0 ? (
+        <>
+          {doctors.slice(0, 4).map((doctor) => (
+            <div
+              key={doctor.id}
+              className="flex items-center justify-between p-4 bg-card rounded-lg border border-border/50 hover:bg-accent/5 transition-colors"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-primary text-white flex justify-center items-center font-medium">
+                  {doctor.name.split("")[0]}
+                </div>
+                <div>
+                  <h4 className="font-medium text-foreground">
+                    Dr. {doctor.name}
+                  </h4>
+                  <p className="text-sm text-muted-foreground capitalize">
+                    {doctor.specialization}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {/* {doctor.patientsToday} patients today */}
+                  </p>
+                </div>
+              </div>
 
-          <div className="flex items-center space-x-2">
-            {getStatusBadge(doctor.status)}
-          </div>
+              <div className="flex items-center space-x-2">
+                {getStatusBadge(doctor.status)}
+              </div>
+            </div>
+          ))}
+
+          <Button variant="default" className="w-full mt-4" asChild>
+            <Link href="/admin/doctors">View All Doctors</Link>
+          </Button>
+        </>
+      ) : (
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            No doctors found
+          </h3>
         </div>
-      ))}
-
-      <Button variant="default" className="w-full mt-4" asChild>
-        <Link href="/admin/doctors">View All Doctors</Link>
-      </Button>
+      )}
     </div>
   );
 };

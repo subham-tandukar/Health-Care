@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/utils/formatter";
 import { Check, X, Clock } from "lucide-react";
 import Link from "next/link";
 
@@ -69,53 +70,50 @@ const getStatusBadge = (status) => {
   }
 };
 
-export const RecentAppointments = () => {
+export const RecentAppointments = ({ appointments }) => {
   return (
     <div className="space-y-4">
-      {mockAppointments.slice(0, 4).map((appointment) => (
-        <div
-          key={appointment.id}
-          className="flex items-center justify-between p-4 bg-card rounded-lg border border-border/50 hover:bg-accent/5 transition-colors"
-        >
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <h4 className="font-medium text-foreground">
-                {appointment.patientName}
-              </h4>
+      {appointments.length > 0 ? (
+        <>
+          {appointments.slice(0, 4).map((appointment) => (
+            <div
+              key={appointment.id}
+              className="flex items-center justify-between p-4 bg-card rounded-lg border border-border/50 hover:bg-accent/5 transition-colors"
+            >
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <h4 className="font-medium text-foreground">
+                    {appointment.patient_name}
+                  </h4>
+                </div>
+                <p className="text-sm text-muted-foreground flex items-center space-x-2">
+                  <span>Dr. {appointment.doctor_name}</span>
+                  <span>•</span>
+                  <span className="capitalize">
+                    {appointment.doctor_specialization}
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(appointment.appointment_date)} at{" "}
+                  {appointment.appointment_time}
+                </p>
+              </div>
+
               {getStatusBadge(appointment.status)}
             </div>
-            <p className="text-sm text-muted-foreground">
-              {appointment.doctorName} • {appointment.type}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {appointment.date} at {appointment.time}
-            </p>
-          </div>
+          ))}
 
-          {appointment.status === "pending" && (
-            <div className="flex space-x-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 w-8 p-0 hover:bg-success hover:text-primary-foreground border-success/20"
-              >
-                <Check className="w-4 h-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 w-8 p-0 hover:bg-destructive hover:text-primary-foreground border-destructive/20"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
+          <Button variant="default" className="w-full mt-4" asChild>
+            <Link href="/admin/appointments">View All Appointments</Link>
+          </Button>
+        </>
+      ) : (
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            No appointments found
+          </h3>
         </div>
-      ))}
-
-      <Button variant="default" className="w-full mt-4" asChild>
-        <Link href="/admin/appointments">View All Appointments</Link>
-      </Button>
+      )}
     </div>
   );
 };

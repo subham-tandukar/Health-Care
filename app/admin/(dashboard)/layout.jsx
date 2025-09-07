@@ -1,5 +1,9 @@
+"use client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/navigation/AdminSidebar";
+import { signOut } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 const AdminLayout = ({ children }) => {
   return (
@@ -23,9 +27,17 @@ const AdminLayout = ({ children }) => {
               </div>
 
               <div className="flex items-center space-x-4">
-                <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">AD</span>
-                </div>
+                <Button
+                  variant={"destructive"}
+                  onClick={() =>
+                    signOut({
+                      callbackUrl: "/admin",
+                    })
+                  }
+                >
+                  <LogOut/>
+                  Logout
+                </Button>
               </div>
             </div>
           </header>

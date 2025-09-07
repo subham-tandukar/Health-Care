@@ -17,50 +17,6 @@ import {
   LocateIcon,
 } from "lucide-react";
 
-// Mock doctor data
-const doctors = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    specialty: "Cardiology",
-    rating: 4.9,
-    experience: "15 years",
-    email: "sarah.smith@medical.com",
-    image: "/placeholder.svg",
-    availableToday: true,
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    specialty: "Neurology",
-    rating: 4.8,
-    experience: "12 years",
-    email: "michael.williams@medical.com",
-    image: "/placeholder.svg",
-    availableToday: false,
-  },
-  {
-    id: 3,
-    name: "Emily Rodriguez",
-    specialty: "Pediatrics",
-    rating: 4.9,
-    experience: "8 years",
-    email: "emily.brown@medical.com",
-    image: "/placeholder.svg",
-    availableToday: true,
-  },
-  {
-    id: 4,
-    name: "David Park",
-    specialty: "Orthopedics",
-    rating: 4.7,
-    experience: "20 years",
-    email: "james.garcia@medical.com",
-    image: "/placeholder.svg",
-    availableToday: true,
-  },
-];
-
 const specialties = [
   { name: "Cardiology", icon: Heart, count: "25+ doctors" },
   { name: "Neurology", icon: Brain, count: "18+ doctors" },
@@ -69,7 +25,7 @@ const specialties = [
   { name: "General Medicine", icon: Stethoscope, count: "45+ doctors" },
 ];
 
-const Home = () => {
+const Home = ({ doctors }) => {
   const [selectedDoctor, setSelectedDoctor] = useState([]);
   const [showBooking, setShowBooking] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -85,7 +41,7 @@ const Home = () => {
   const filteredDoctors = doctors.filter(
     (doctor) =>
       doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+      doctor.specialization.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (showBooking) {
