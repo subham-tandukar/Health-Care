@@ -1,9 +1,16 @@
+// app/api/appointment/route.js
+
 import { db } from "@/lib/db";
 import {
   handleErrorResponse,
   handleSuccessResponse,
 } from "@/utils/apiResponse";
+import { sendEmail } from "@/utils/sendEmail";
+import { generateReviewToken } from "@/utils/tokenGenerator";
+import { reviewRequestEmail } from "@/utils/emailTemplates";
+import nodemailer from "nodemailer";
 
+// POST - Create new appointment
 export async function POST(req) {
   try {
     const {
@@ -108,6 +115,18 @@ export async function POST(req) {
       [doctor_id, appointment_date, appointment_time]
     );
 
+    // Send "Appointment Request Received" email
+    await sendEmail({
+      status: "received",
+      name: patient_name,
+      email: patient_email,
+      doctorName: doctor[0].name,
+      doctorSpecialization: doctor[0].specialization,
+      date: appointment_date,
+      time: appointment_time,
+      reason: reason,
+    });
+
     return handleSuccessResponse(
       {
         doctor_id,
@@ -129,6 +148,7 @@ export async function POST(req) {
   }
 }
 
+// GET - Fetch appointments
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
@@ -145,6 +165,8 @@ export async function GET(req) {
           a.reason,
           a.status,
           a.created_at,
+          a.reviewed_at,
+          d.id AS doctor_id,
           d.name AS doctor_name,
           d.specialization AS doctor_specialization
         FROM appointments a
@@ -172,25 +194,42 @@ export async function GET(req) {
   }
 }
 
+// PATCH - Update appointment status
 export async function PATCH(req) {
   try {
-    const { appointment_id, status } = await req.json();
+    const { appointment_id, status, rejection_reason } = await req.json();
 
     // Validate input
     if (!appointment_id || !status) {
       return handleErrorResponse("Appointment ID and status are required", 400);
     }
 
-    // Check if appointment exists
+    // Validate status
+    const validStatuses = [
+      "pending",
+      "approved",
+      "rejected",
+      "completed",
+      "cancelled",
+    ];
+    if (!validStatuses.includes(status)) {
+      return handleErrorResponse("Invalid status", 400);
+    }
+
+    // Get appointment details with doctor info
     const appointment = await db(
-      `SELECT id, doctor_id, appointment_date, appointment_time, status 
-         FROM appointments WHERE id = ?`,
+      `SELECT a.*, d.name AS doctor_name, d.specialization AS doctor_specialization
+         FROM appointments a
+         JOIN doctors d ON a.doctor_id = d.id
+         WHERE a.id = ?`,
       [appointment_id]
     );
 
     if (appointment.length === 0) {
       return handleErrorResponse("Appointment not found", 404);
     }
+
+    const appt = appointment[0];
 
     // Update appointment status
     await db(
@@ -200,26 +239,121 @@ export async function PATCH(req) {
       [status, appointment_id]
     );
 
-    // If rejected → free up the slot
-    if (status === "rejected") {
+    // Handle status-specific actions
+    if (status === "approved") {
+      // Send approval email
+      await sendEmail({
+        status: "approved",
+        name: appt.patient_name,
+        email: appt.patient_email,
+        doctorName: appt.doctor_name,
+        doctorSpecialization: appt.doctor_specialization,
+        date: appt.appointment_date,
+        time: appt.appointment_time,
+        reason: appt.reason,
+      });
+    } else if (status === "rejected") {
+      // Free up the slot
       await db(
         `UPDATE doctor_availability
            SET is_booked = 0
            WHERE doctor_id = ? AND available_date = ? AND slot_time = ?`,
-        [
-          appointment[0].doctor_id,
-          appointment[0].appointment_date,
-          appointment[0].appointment_time,
-        ]
+        [appt.doctor_id, appt.appointment_date, appt.appointment_time]
+      );
+
+      // Send rejection email
+      await sendEmail({
+        status: "rejected",
+        name: appt.patient_name,
+        email: appt.patient_email,
+        doctorName: appt.doctor_name,
+        doctorSpecialization: appt.doctor_specialization,
+        date: appt.appointment_date,
+        time: appt.appointment_time,
+        reason: appt.reason,
+        rejectionReason:
+          rejection_reason || "The requested time slot is no longer available",
+      });
+    } else if (status === "completed") {
+      // Generate review token
+      const reviewToken = generateReviewToken(appointment_id);
+
+      // Store token in database
+      await db(
+        "UPDATE appointments SET review_token = ?, review_token_sent_at = NOW() WHERE id = ?",
+        [reviewToken, appointment_id]
+      );
+
+      // Generate review link
+      const reviewLink = `${
+        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+      }/review/${reviewToken}`;
+
+      // Send review request email
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_PASS,
+        },
+      });
+
+      const fromEmail = process.env.GMAIL_USER || "healthcare@gmail.com";
+
+      await transporter.sendMail({
+        from: `HealthCare <${fromEmail}>`,
+        to: appt.patient_email,
+        subject: "Share Your Experience - Rate Your Visit",
+        html: reviewRequestEmail({
+          name: appt.patient_name,
+          doctorName: appt.doctor_name,
+          doctorSpecialization: appt.doctor_specialization,
+          date: appt.appointment_date,
+          time: appt.appointment_time,
+          reviewLink: reviewLink,
+        }),
+      });
+
+      // Update doctor metrics
+      await db(
+        `UPDATE doctors 
+         SET completed_appointments = completed_appointments + 1,
+             total_appointments = total_appointments + 1
+         WHERE id = ?`,
+        [appt.doctor_id]
+      );
+    } else if (status === "cancelled") {
+      // Free up the slot if cancelled
+      await db(
+        `UPDATE doctor_availability
+           SET is_booked = 0
+           WHERE doctor_id = ? AND available_date = ? AND slot_time = ?`,
+        [appt.doctor_id, appt.appointment_date, appt.appointment_time]
       );
     }
 
     return handleSuccessResponse(
-      { appointment_id, status },
+      {
+        appointment_id,
+        status,
+        message: getStatusMessage(status),
+      },
       "Appointment status updated successfully"
     );
   } catch (error) {
     console.error("Error updating appointment status:", error);
     return handleErrorResponse("Internal server error", 500);
   }
+}
+
+// Helper function to get status-specific messages
+function getStatusMessage(status) {
+  const messages = {
+    approved: "Appointment approved and confirmation email sent",
+    rejected: "Appointment rejected and notification email sent",
+    completed: "Appointment marked as completed and review request sent",
+    cancelled: "Appointment cancelled and slot freed up",
+    pending: "Appointment status updated to pending",
+  };
+  return messages[status] || "Appointment status updated";
 }

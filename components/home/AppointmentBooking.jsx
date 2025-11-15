@@ -22,9 +22,53 @@ export const AppointmentBooking = ({ selectedDoctor, onClose }) => {
   });
   const [loading, setLoading] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
+  const [errors, setErrors] = useState({
+    patientName: "",
+    phone: "",
+  });
+
+  const validateName = (name) => {
+    // Check if name contains any numbers
+    const hasNumbers = /\d/.test(name);
+    if (hasNumbers) {
+      return "Name should not contain numbers";
+    }
+    // Check if name is not empty and has at least 2 characters
+    if (name.trim().length < 2) {
+      return "Name must be at least 2 characters";
+    }
+    return "";
+  };
+
+  const validatePhone = (phone) => {
+    // Check if phone contains only numbers, spaces, hyphens, and plus sign
+    const phoneRegex = /^[0-9+\-\s()]+$/;
+    if (!phoneRegex.test(phone)) {
+      return "Phone number should only contain numbers";
+    }
+    // Check if phone has at least 10 digits
+    const digitsOnly = phone.replace(/\D/g, "");
+    if (digitsOnly.length < 10) {
+      return "Phone number must be at least 10 digits";
+    }
+    return "";
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate all fields before submission
+    const nameError = validateName(formData.patientName);
+    const phoneError = validatePhone(formData.phone);
+
+    if (nameError || phoneError) {
+      setErrors({
+        patientName: nameError,
+        phone: phoneError,
+      });
+      toast.error("Please fix the validation errors");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -58,6 +102,7 @@ export const AppointmentBooking = ({ selectedDoctor, onClose }) => {
           date: "",
           time: "",
         });
+        setErrors({ patientName: "", phone: "" });
         router.refresh();
         setIsBooked(true);
       }
@@ -71,6 +116,23 @@ export const AppointmentBooking = ({ selectedDoctor, onClose }) => {
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+
+    // Clear error when user starts typing
+    if (field === "patientName") {
+      setErrors((prev) => ({ ...prev, patientName: "" }));
+    } else if (field === "phone") {
+      setErrors((prev) => ({ ...prev, phone: "" }));
+    }
+  };
+
+  const handleNameBlur = () => {
+    const error = validateName(formData.patientName);
+    setErrors((prev) => ({ ...prev, patientName: error }));
+  };
+
+  const handlePhoneBlur = () => {
+    const error = validatePhone(formData.phone);
+    setErrors((prev) => ({ ...prev, phone: error }));
   };
 
   return (
@@ -103,8 +165,13 @@ export const AppointmentBooking = ({ selectedDoctor, onClose }) => {
                     onChange={(e) =>
                       handleInputChange("patientName", e.target.value)
                     }
+                    onBlur={handleNameBlur}
+                    className={errors.patientName ? "border-red-500" : ""}
                     required
                   />
+                  {errors.patientName && (
+                    <p className="text-sm text-red-500">{errors.patientName}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone *</Label>
@@ -113,8 +180,13 @@ export const AppointmentBooking = ({ selectedDoctor, onClose }) => {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
+                    onBlur={handlePhoneBlur}
+                    className={errors.phone ? "border-red-500" : ""}
                     required
                   />
+                  {errors.phone && (
+                    <p className="text-sm text-red-500">{errors.phone}</p>
+                  )}
                 </div>
               </div>
 
@@ -207,7 +279,7 @@ export const AppointmentBooking = ({ selectedDoctor, onClose }) => {
               <p className="text-muted-foreground">
                 The appointment is currently{" "}
                 <span className="font-medium">pending approval</span> {""}
-                from the admin. You’ll be notified once it is approved or
+                from the admin. You'll be notified once it is approved or
                 rejected.
               </p>
             </div>
